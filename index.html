@@ -1,0 +1,45 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Transport Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <h2>Public Transport Real-Time Tracker</h2>
+    <div id="map" style="height: 600px;"></div>
+
+    <script>
+        var map = L.map('map').setView([28.6139, 77.2090], 13); // Center on New Delhi
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        var markers = {};
+
+        function fetchLocations() {
+            fetch('http://127.0.0.1:5000/locations')
+                .then(response => response.json())
+                .then(data => {
+                    for (var vehicle_id in data) {
+                        var loc = data[vehicle_id];
+                        var lat = loc.latitude;
+                        var lon = loc.longitude;
+
+                        if (markers[vehicle_id]) {
+                            markers[vehicle_id].setLatLng([lat, lon]);
+                        } else {
+                            markers[vehicle_id] = L.marker([lat, lon]).addTo(map)
+                                .bindPopup('Vehicle ID: ' + vehicle_id);
+                        }
+                    }
+                })
+                .catch(err => console.error('Error fetching locations:', err));
+        }
+
+        setInterval(fetchLocations, 5000);  // Refresh every 5 seconds
+        fetchLocations();  // Initial fetch
+    </script>
+</body>
+</html>
